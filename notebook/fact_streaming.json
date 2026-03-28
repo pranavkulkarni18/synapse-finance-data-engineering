@@ -18,15 +18,16 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "1c912377-d667-4054-b00a-ac7401f1274e"
+				"spark.autotune.trackingId": "dc8ff70d-71ef-45d3-88aa-a4de8e8a197e"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
 			"language_info": {
 				"name": "python"
 			},
@@ -37,14 +38,13 @@
 				"endpoint": "https://synapsefinanceprojectdev.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pipelinespkpool",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.5",
 				"nodeCount": 10,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 30
 		},
