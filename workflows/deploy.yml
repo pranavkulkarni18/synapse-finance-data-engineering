@@ -23,4 +23,4 @@ jobs:
       with:
         resourceGroupName: rg_synapse_project
         template: ./TemplateForWorkspace.json
-        parameters: ./TemplateParameters_prod.json
+        parameters: ./TemplateParametersForWorkspace_prod.json
