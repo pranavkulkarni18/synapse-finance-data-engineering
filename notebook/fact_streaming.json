@@ -1,6 +1,9 @@
 {
 	"name": "fact_streaming",
 	"properties": {
+		"folder": {
+			"name": "streaming"
+		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
@@ -18,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "dc8ff70d-71ef-45d3-88aa-a4de8e8a197e"
+				"spark.autotune.trackingId": "df91c84d-6436-4038-a4f8-b9efec316f54"
 			}
 		},
 		"metadata": {
