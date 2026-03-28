@@ -7,7 +7,7 @@
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
-			"referenceName": "finspkpool",
+			"referenceName": "pipelinespkpool",
 			"type": "BigDataPoolReference"
 		},
 		"sessionProperties": {
@@ -21,37 +21,51 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "09ad2388-051b-4d57-a63e-915228100f43"
+				"spark.autotune.trackingId": "6acb1a4d-1dbd-4feb-b179-3e83151fccde"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "python"
+			},
 			"language_info": {
 				"name": "python"
 			},
 			"a365ComputeOptions": {
-				"id": "/subscriptions/6d8b9d7b-ba34-49d6-8db5-cd44ccdfc98f/resourceGroups/rg_synapseproject_dev/providers/Microsoft.Synapse/workspaces/synapsefinanceprojectdev/bigDataPools/finspkpool",
-				"name": "finspkpool",
+				"id": "/subscriptions/6d8b9d7b-ba34-49d6-8db5-cd44ccdfc98f/resourceGroups/rg_synapseproject_dev/providers/Microsoft.Synapse/workspaces/synapsefinanceprojectdev/bigDataPools/pipelinespkpool",
+				"name": "pipelinespkpool",
 				"type": "Spark",
-				"endpoint": "https://synapsefinanceprojectdev.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/finspkpool",
+				"endpoint": "https://synapsefinanceprojectdev.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pipelinespkpool",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.5",
-				"nodeCount": 3,
+				"nodeCount": 10,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 30
 		},
 		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Generating Dimensions\n",
+					""
+				]
+			},
 			{
 				"cell_type": "code",
 				"source": [
