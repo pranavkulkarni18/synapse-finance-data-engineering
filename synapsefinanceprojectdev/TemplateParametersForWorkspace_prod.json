@@ -3,22 +3,22 @@
 	"contentVersion": "1.0.0.0",
 	"parameters": {
 		"workspaceName": {
-			"value": "synapsefinanceproject"
+			"value": "synapsefinanceprojectdev"
 		},
-		"ls_syn_e2e_prod_accountKey": {
+		"ls_syn_e2e_accountKey": {
 			"value": ""
 		},
-		"synapsefinanceproject-WorkspaceDefaultSqlServer_connectionString": {
-			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapsefinanceproject.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		"synapsefinanceprojectdev-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapsefinanceprojectdev.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
 		"ls_keyvault_properties_typeProperties_baseUrl": {
-			"value": "https://synapse-kv-prod.vault.azure.net/"
+			"value": "https://synapseFin-kv-dev.vault.azure.net/"
 		},
-		"ls_syn_e2e_prod_properties_typeProperties_url": {
-			"value": "https://synendtoend.dfs.core.windows.net/"
+		"ls_syn_e2e_properties_typeProperties_url": {
+			"value": "https://synendtoenddev.dfs.core.windows.net/"
 		},
-		"synapsefinanceproject-WorkspaceDefaultStorage_properties_typeProperties_url": {
-			"value": "https://synendtoend.dfs.core.windows.net"
+		"synapsefinanceprojectdev-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://synendtoenddev.dfs.core.windows.net"
 		}
 	}
 }
