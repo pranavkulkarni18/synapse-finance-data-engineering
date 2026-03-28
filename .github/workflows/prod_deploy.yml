@@ -26,5 +26,5 @@ jobs:
       with:
         resourceGroupName: rg_synapse_project
         subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-        template: synapsefinanceprojectdev/TemplateForWorkspace.json
-        parameters: synapsefinanceprojectdev/TemplateParametersForWorkspace_prod.json
+        template: ./TemplateForWorkspace.json
+        parameters: @./TemplateParametersForWorkspace_prod.json
