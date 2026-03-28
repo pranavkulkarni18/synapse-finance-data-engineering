@@ -22,5 +22,6 @@ jobs:
       uses: Azure/arm-deploy@v1
       with:
         resourceGroupName: rg_synapse_project
+        subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
         template: ./TemplateForWorkspace.json
         parameters: ./TemplateParametersForWorkspace_prod.json
