@@ -30458,7 +30458,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "bfe60fee-f30d-4d27-a635-74f6636310a2"
+						"spark.autotune.trackingId": "df91c84d-6436-4038-a4f8-b9efec316f54"
 					}
 				},
 				"metadata": {
@@ -30483,15 +30483,13 @@
 						"sparkVersion": "3.5",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"%%configure -f\n",
 							"{\n",
@@ -30505,7 +30503,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"from pyspark.sql.functions import col\n",
 							"from pyspark.sql.functions import from_json\n",
@@ -30518,7 +30515,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"storage_account = \"synendtoenddev\"\n",
 							"container_name = \"bronze\"\n",
@@ -30530,7 +30526,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"connectionString = mssparkutils.credentials.getSecret(\n",
 							"    \"synapseFin-kv-dev\",  \n",
@@ -30552,7 +30547,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_raw = spark.readStream \\\n",
 							"    .format(\"eventhubs\") \\\n",
@@ -30564,7 +30558,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"schema = StructType([\n",
 							"    StructField(\"transaction_id\", IntegerType()),\n",
@@ -30582,7 +30575,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_stream = df_raw.selectExpr(\"CAST(body AS STRING) as message\")\n",
 							"\n",
@@ -30595,7 +30587,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"query = df_parsed.writeStream \\\n",
 							"    .format(\"parquet\") \\\n",
@@ -30624,7 +30615,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_fact = spark.readStream \\\n",
 							"    .format(\"parquet\") \\\n",
@@ -30641,7 +30631,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_joined = df_fact.alias(\"f\").join(\n",
 							"    spark.table(\"silver.dim_financial_account\").alias(\"d\"),\n",
@@ -30657,7 +30646,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_final = df_joined.select(\n",
 							"    col(\"f.transaction_id\"),\n",
@@ -30676,7 +30664,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_joined = df_final.join(\n",
 							"    spark.table(\"silver.dim_cost_object\").alias(\"c\"),\n",
@@ -30691,7 +30678,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_final = df_joined.select(\n",
 							"    col(\"f.transaction_id\"),\n",
@@ -30711,7 +30697,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_joined = df_final.join(\n",
 							"    spark.table(\"silver.fact_exchange_rates\").alias(\"fx\"),\n",
@@ -30725,7 +30710,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_final = df_joined.select(\n",
 							"    col(\"f.transaction_id\"),\n",
@@ -30744,7 +30728,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_final = df_final.withColumn(\n",
 							"    \"amount_usd\",\n",
@@ -30756,7 +30739,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"query_1 = df_final.writeStream \\\n",
 							"    .format(\"delta\") \\\n",
