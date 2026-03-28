@@ -1,0 +1,308 @@
+{
+	"name": "generate_facts",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "finspkpool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "d0bd9946-e8ca-4280-bc49-08732289f550"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/6d8b9d7b-ba34-49d6-8db5-cd44ccdfc98f/resourceGroups/rg_synapseproject_dev/providers/Microsoft.Synapse/workspaces/synapsefinanceprojectdev/bigDataPools/finspkpool",
+				"name": "finspkpool",
+				"type": "Spark",
+				"endpoint": "https://synapsefinanceprojectdev.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/finspkpool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.5",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql import SparkSession\n",
+					"from pyspark.sql.functions import *\n",
+					"from pyspark.sql.types import *\n",
+					"import random\n",
+					"import uuid\n",
+					"from datetime import datetime, timedelta"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"storage_account = \"synendtoenddev\"\n",
+					"container_name = \"bronze\"\n",
+					"\n",
+					"base_path = f\"abfss://{container_name}@{storage_account}.dfs.core.windows.net\""
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_company = spark.read.parquet(f\"{base_path}/dim_company\")\n",
+					"df_profit_unit = spark.read.parquet(f\"{base_path}/dim_profit_unit\")\n",
+					"df_cost_object = spark.read.parquet(f\"{base_path}/dim_cost_object_raw\")\n",
+					"df_account = spark.read.parquet(f\"{base_path}/dim_financial_account_raw\")\n",
+					"df_currency = spark.read.parquet(f\"{base_path}/dim_currency\")\n",
+					"df_calendar = spark.read.parquet(f\"{base_path}/dim_fiscal_calendar\")"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"\n",
+					"transactions = []\n",
+					"transaction_id = 1\n",
+					"\n",
+					"companies = df_company.collect()\n",
+					"profit_units = df_profit_unit.collect()\n",
+					"cost_objects = df_cost_object.select(\"cost_object_code\",\"company_sk\").distinct().collect()\n",
+					"accounts = df_account.select(\"account_number\").distinct().collect()\n",
+					"currencies = df_currency.select(\"currency_code\").collect()\n",
+					"dates = df_calendar.select(\"fiscal_date\").collect()\n",
+					"\n",
+					"for i in range(10000):   # generate 10k transactions\n",
+					"    \n",
+					"    company = random.choice(companies)\n",
+					"    \n",
+					"    # choose profit unit belonging to that company\n",
+					"    pu = random.choice([p for p in profit_units if p.company_sk == company.company_sk])\n",
+					"    \n",
+					"    co = random.choice([c for c in cost_objects if c.company_sk == company.company_sk])\n",
+					"    \n",
+					"    account = random.choice(accounts)\n",
+					"    \n",
+					"    currency = random.choice(currencies)\n",
+					"    \n",
+					"    date = random.choice(dates)\n",
+					"    \n",
+					"    \n",
+					"    amount = float(f\"{random.uniform(100, 10000):.2f}\")\n",
+					"    \n",
+					"    dc_flag = random.choice([\"D\",\"C\"])\n",
+					"    \n",
+					"    transactions.append((\n",
+					"        transaction_id,\n",
+					"        company.company_sk,\n",
+					"        pu.profit_unit_sk,\n",
+					"        co.cost_object_code,\n",
+					"        account.account_number,\n",
+					"        currency.currency_code,\n",
+					"        amount,\n",
+					"        dc_flag,\n",
+					"        date.fiscal_date,\n",
+					"        datetime.now()\n",
+					"    ))\n",
+					"    \n",
+					"    transaction_id += 1"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"\n",
+					"\n",
+					"schema_tx = StructType([\n",
+					"    StructField(\"transaction_id\", IntegerType(), False),\n",
+					"    StructField(\"company_sk\", IntegerType(), False),\n",
+					"    StructField(\"profit_unit_sk\", IntegerType(), False),\n",
+					"    StructField(\"cost_object_code\", StringType(), False),\n",
+					"    StructField(\"account_number\", StringType(), False),\n",
+					"    StructField(\"transaction_currency\", StringType(), False),\n",
+					"    StructField(\"amount\", DoubleType(), False),\n",
+					"    StructField(\"debit_credit_flag\", StringType(), False),\n",
+					"    StructField(\"transaction_date\", DateType(), False),\n",
+					"    StructField(\"ingestion_timestamp\", TimestampType(), False)\n",
+					"])\n",
+					"\n",
+					"df_tx = spark.createDataFrame(transactions, schema_tx)"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_tx.write.mode(\"overwrite\").parquet(\n",
+					"    f\"{base_path}/fact_financial_transactions_raw\"\n",
+					")\n",
+					"\n",
+					""
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"fx_rates = []\n",
+					"\n",
+					"start_date = datetime(2023,1,1)\n",
+					"end_date = datetime(2025,12,31)\n",
+					"\n",
+					"currencies = [\"USD\",\"INR\",\"AED\",\"CNY\"]\n",
+					"\n",
+					"current_date = start_date\n",
+					"\n",
+					"while current_date <= end_date:\n",
+					"    \n",
+					"    for currency in currencies:\n",
+					"        \n",
+					"        if currency == \"USD\":\n",
+					"            rate = 1.0\n",
+					"        elif currency == \"INR\":\n",
+					"            rate = float(f\"{random.uniform(70, 85):.4f}\")\n",
+					"        elif currency == \"AED\":\n",
+					"            rate = float(f\"{random.uniform(3.5, 3.8):.4f}\")\n",
+					"        elif currency == \"CNY\":\n",
+					"            rate = float(f\"{random.uniform(6.0, 7.5):.4f}\")\n",
+					"        \n",
+					"        fx_rates.append((\n",
+					"            currency,\n",
+					"            rate,\n",
+					"            current_date.date(),\n",
+					"            datetime.now()\n",
+					"        ))\n",
+					"    \n",
+					"    current_date += timedelta(days=1)"
+				],
+				"execution_count": 10
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"\n",
+					"\n",
+					"schema_fx = StructType([\n",
+					"    StructField(\"currency_code\", StringType(), False),\n",
+					"    StructField(\"rate_to_usd\", DoubleType(), False),\n",
+					"    StructField(\"rate_date\", DateType(), False),\n",
+					"    StructField(\"ingestion_timestamp\", TimestampType(), False)\n",
+					"])\n",
+					"\n",
+					"df_fx = spark.createDataFrame(fx_rates, schema_fx)\n",
+					"\n",
+					"df_fx.write.mode(\"overwrite\").parquet(\n",
+					"    f\"{base_path}/fact_exchange_rates_raw\"\n",
+					")"
+				],
+				"execution_count": 11
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"accounts = df_account.select(\"account_number\").distinct().collect()\n",
+					"companies = df_company.collect()\n",
+					"profit_units = df_profit_unit.collect()"
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"budget_rows = []\n",
+					"\n",
+					"for year in [2023, 2024, 2025]:\n",
+					"    \n",
+					"    growth_factor = 1 + ((year - 2023) * 0.05)  # 5% growth per year\n",
+					"    \n",
+					"    for month in range(1, 13):\n",
+					"        \n",
+					"        for company in companies:\n",
+					"            \n",
+					"            # profit units belonging to that company\n",
+					"            pu_list = [p for p in profit_units if p.company_sk == company.company_sk]\n",
+					"            \n",
+					"            for pu in pu_list:\n",
+					"                \n",
+					"                # choose 20 random accounts for budgeting\n",
+					"                selected_accounts = random.sample(accounts, 20)\n",
+					"                \n",
+					"                for acc in selected_accounts:\n",
+					"                    \n",
+					"                    base_budget = random.uniform(5000, 50000)\n",
+					"                    \n",
+					"                    monthly_variation = random.uniform(0.9, 1.1)\n",
+					"                    \n",
+					"                    final_budget = base_budget * monthly_variation * growth_factor\n",
+					"                    \n",
+					"                    budget_rows.append((\n",
+					"                        company.company_sk,\n",
+					"                        pu.profit_unit_sk,\n",
+					"                        acc.account_number,\n",
+					"                        year,\n",
+					"                        month,\n",
+					"                        float(f\"{final_budget:.2f}\"),\n",
+					"                        datetime.now()\n",
+					"                    ))"
+				],
+				"execution_count": 15
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"\n",
+					"\n",
+					"schema_budget = StructType([\n",
+					"    StructField(\"company_sk\", IntegerType(), False),\n",
+					"    StructField(\"profit_unit_sk\", IntegerType(), False),\n",
+					"    StructField(\"account_number\", StringType(), False),\n",
+					"    StructField(\"fiscal_year\", IntegerType(), False),\n",
+					"    StructField(\"fiscal_month\", IntegerType(), False),\n",
+					"    StructField(\"budget_amount\", DoubleType(), False),\n",
+					"    StructField(\"ingestion_timestamp\", TimestampType(), False)\n",
+					"])\n",
+					"\n",
+					"df_budget = spark.createDataFrame(budget_rows, schema_budget)"
+				],
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_budget.write.mode(\"overwrite\").parquet(\n",
+					"    f\"{base_path}/fact_budget_raw\"\n",
+					")\n",
+					"\n",
+					""
+				],
+				"execution_count": 19
+			}
+		]
+	}
+}

@@ -1,0 +1,38 @@
+{
+	"name": "CostObject",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_syn_e2e",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "dim_cost_object_raw",
+				"fileSystem": "bronze"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "cost_object_code",
+				"type": "UTF8"
+			},
+			{
+				"name": "company_sk",
+				"type": "INT32"
+			},
+			{
+				"name": "description",
+				"type": "UTF8"
+			},
+			{
+				"name": "source_updated_timestamp",
+				"type": "TIMESTAMP_MICROS"
+			}
+		]
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

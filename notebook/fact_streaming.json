@@ -1,0 +1,299 @@
+{
+	"name": "fact_streaming",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "pipelinespkpool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "1c912377-d667-4054-b00a-ac7401f1274e"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/6d8b9d7b-ba34-49d6-8db5-cd44ccdfc98f/resourceGroups/rg_synapseproject_dev/providers/Microsoft.Synapse/workspaces/synapsefinanceprojectdev/bigDataPools/pipelinespkpool",
+				"name": "pipelinespkpool",
+				"type": "Spark",
+				"endpoint": "https://synapsefinanceprojectdev.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pipelinespkpool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.5",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"%%configure -f\n",
+					"{\n",
+					"  \"conf\": {\n",
+					"    \"spark.jars.packages\": \"com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22\"\n",
+					"  }\n",
+					"}"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import col\n",
+					"from pyspark.sql.functions import from_json\n",
+					"import json\n",
+					"from pyspark.sql.types import *\n",
+					"from pyspark.sql.types import StructType, StructField"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"storage_account = \"synendtoenddev\"\n",
+					"container_name = \"bronze\"\n",
+					"\n",
+					"base_path = f\"abfss://{container_name}@{storage_account}.dfs.core.windows.net\""
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"connectionString = mssparkutils.credentials.getSecret(\n",
+					"    \"synapseFin-kv-dev\",  \n",
+					"    \"ehConnectionString\"\n",
+					")\n",
+					"\n",
+					"ehConf = {\n",
+					"  'eventhubs.connectionString': sc._jvm.org.apache.spark.eventhubs.EventHubsUtils.encrypt(connectionString),\n",
+					"  'eventhubs.startingPosition': json.dumps({\n",
+					"      \"offset\": \"-1\",\n",
+					"      \"seqNo\": -1,\n",
+					"      \"enqueuedTime\": None,\n",
+					"      \"isInclusive\": True\n",
+					"  })\n",
+					"}"
+				],
+				"execution_count": 11
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_raw = spark.readStream \\\n",
+					"    .format(\"eventhubs\") \\\n",
+					"    .options(**ehConf) \\\n",
+					"    .load()"
+				],
+				"execution_count": 12
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"schema = StructType([\n",
+					"    StructField(\"transaction_id\", IntegerType()),\n",
+					"    StructField(\"company_sk\", IntegerType()),\n",
+					"    StructField(\"profit_unit_sk\", IntegerType()),\n",
+					"    StructField(\"cost_object_code\", StringType()),\n",
+					"    StructField(\"account_number\", StringType()),\n",
+					"    StructField(\"currency\", StringType()),\n",
+					"    StructField(\"amount\", DoubleType()),\n",
+					"    StructField(\"transaction_date\", StringType())\n",
+					"])"
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_stream = df_raw.selectExpr(\"CAST(body AS STRING) as message\")\n",
+					"\n",
+					"df_parsed = df_stream.select(\n",
+					"    from_json(col(\"message\"), schema).alias(\"data\")\n",
+					").select(\"data.*\")"
+				],
+				"execution_count": 14
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"query = df_parsed.writeStream \\\n",
+					"    .format(\"parquet\") \\\n",
+					"    .option(\"path\", f\"{base_path}/fact_financial_transactions_raw\") \\\n",
+					"    .option(\"checkpointLocation\", f\"{base_path}/checkpoints/transactions\") \\\n",
+					"    .outputMode(\"append\") \\\n",
+					"    .option(\"truncate\", \"false\") \\\n",
+					"    .trigger(processingTime=\"10 seconds\") \\\n",
+					"    .start()"
+				],
+				"execution_count": 15
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Silver Fact Table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_fact = spark.readStream \\\n",
+					"    .format(\"parquet\") \\\n",
+					"    .schema(schema) \\\n",
+					"    .load(\"abfss://bronze@synendtoenddev.dfs.core.windows.net/fact_financial_transactions_raw\")\n",
+					"\n",
+					"df_fact = df_fact.withColumn(\n",
+					"    \"transaction_date\",\n",
+					"    (col(\"transaction_date\").cast(\"date\"))\n",
+					")"
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_joined = df_fact.alias(\"f\").join(\n",
+					"    spark.table(\"silver.dim_financial_account\").alias(\"d\"),\n",
+					"    (col(\"f.account_number\") == col(\"d.account_number\"))&\n",
+					"    (col(\"f.transaction_date\") >= col(\"d.effective_from\"))&\n",
+					"    (col(\"f.transaction_date\") <= col(\"d.effective_to\")),\n",
+					"    \"left\"\n",
+					")\n",
+					""
+				],
+				"execution_count": 17
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_final = df_joined.select(\n",
+					"    col(\"f.transaction_id\"),\n",
+					"    col(\"f.company_sk\"),\n",
+					"    col(\"f.profit_unit_sk\"),\n",
+					"    col(\"f.cost_object_code\"),\n",
+					"    col(\"d.account_sk\"),\n",
+					"    col(\"f.account_number\"),\n",
+					"    col(\"f.amount\"),\n",
+					"    col(\"f.currency\"),\n",
+					"    col(\"f.transaction_date\")\n",
+					")"
+				],
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_joined = df_final.join(\n",
+					"    spark.table(\"silver.dim_cost_object\").alias(\"c\"),\n",
+					"    (col(\"f.cost_object_code\") == col(\"c.cost_object_code\")) &\n",
+					"    (col(\"f.transaction_date\") >= col(\"c.effective_from\")) &\n",
+					"    (col(\"f.transaction_date\") <= col(\"c.effective_to\")),\n",
+					"    \"left\"\n",
+					")"
+				],
+				"execution_count": 19
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_final = df_joined.select(\n",
+					"    col(\"f.transaction_id\"),\n",
+					"    col(\"f.company_sk\"),\n",
+					"    col(\"f.profit_unit_sk\"),\n",
+					"    col(\"f.cost_object_code\"),\n",
+					"    col(\"d.account_sk\"),\n",
+					"    col(\"c.cost_object_sk\"),\n",
+					"    col(\"f.account_number\"),\n",
+					"    col(\"f.amount\"),\n",
+					"    col(\"f.currency\"),\n",
+					"    col(\"f.transaction_date\")\n",
+					")"
+				],
+				"execution_count": 20
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_joined = df_final.join(\n",
+					"    spark.table(\"silver.fact_exchange_rates\").alias(\"fx\"),\n",
+					"    (col(\"f.currency\") == col(\"fx.from_currency\")) &\n",
+					"    (col(\"f.transaction_date\") == col(\"fx.rate_date\")),\n",
+					"    \"left\"\n",
+					")"
+				],
+				"execution_count": 21
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_final = df_joined.select(\n",
+					"    col(\"f.transaction_id\"),\n",
+					"    col(\"f.company_sk\"),\n",
+					"    col(\"f.profit_unit_sk\"),\n",
+					"    col(\"d.account_sk\"),\n",
+					"    col(\"c.cost_object_sk\"),\n",
+					"    col(\"f.amount\"),\n",
+					"    col(\"f.currency\"),\n",
+					"    col(\"f.transaction_date\"),\n",
+					"    col(\"fx.rate_to_usd\")\n",
+					")"
+				],
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_final = df_final.withColumn(\n",
+					"    \"amount_usd\",\n",
+					"    col(\"amount\") * col(\"rate_to_usd\")\n",
+					")"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"query_1 = df_final.writeStream \\\n",
+					"    .format(\"delta\") \\\n",
+					"    .outputMode(\"append\") \\\n",
+					"    .option(\"mergeSchema\", \"true\")\\\n",
+					"    .option(\"checkpointLocation\", \"abfss://silver@synendtoenddev.dfs.core.windows.net/checkpoints/fact_transactions\") \\\n",
+					"    .start(\"abfss://silver@synendtoenddev.dfs.core.windows.net/fact_financial_transactions\")"
+				],
+				"execution_count": 24
+			}
+		]
+	}
+}

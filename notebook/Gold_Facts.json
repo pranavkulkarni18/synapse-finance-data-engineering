@@ -1,0 +1,198 @@
+{
+	"name": "Gold_Facts",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "pipelinespkpool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "059ba213-25cf-4580-b082-d40f68136f96"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/6d8b9d7b-ba34-49d6-8db5-cd44ccdfc98f/resourceGroups/rg_synapseproject_dev/providers/Microsoft.Synapse/workspaces/synapsefinanceprojectdev/bigDataPools/pipelinespkpool",
+				"name": "pipelinespkpool",
+				"type": "Spark",
+				"endpoint": "https://synapsefinanceprojectdev.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pipelinespkpool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.5",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import *\n",
+					"from pyspark.sql.functions import sum, col"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_gold_revenue = spark.table(\"silver.fact_financial_transactions\").alias(\"f\") \\\n",
+					".join(\n",
+					"    spark.table(\"silver.dim_company\").alias(\"c\"),\n",
+					"    col(\"f.company_sk\") == col(\"c.company_sk\"),\n",
+					"    \"left\"\n",
+					").groupBy(\n",
+					"    col(\"c.company_name\"),\n",
+					"    col(\"f.transaction_date\")\n",
+					").agg(\n",
+					"    sum(\"f.amount_usd\").alias(\"total_revenue_usd\")\n",
+					")"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_gold_revenue = df_gold_revenue \\\n",
+					".withColumn(\"year\", year(col(\"transaction_date\"))) \\\n",
+					".withColumn(\"month\", month(col(\"transaction_date\"))) \\\n",
+					".groupBy(\"company_name\", \"year\", \"month\") \\\n",
+					".agg(\n",
+					"    sum(\"total_revenue_usd\").alias(\"monthly_revenue_usd\")\n",
+					")"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_gold_revenue.write \\\n",
+					"    .format(\"delta\") \\\n",
+					"    .mode(\"overwrite\") \\\n",
+					"    .saveAsTable(\"gol.fact_revenue_summary\")"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Fact Budget vs actual\n",
+					""
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_actual = spark.table(\"silver.fact_financial_transactions\").alias(\"a\")\n",
+					"df_budget = spark.table(\"silver.fact_budget\").alias(\"b\")\n",
+					"df_company = spark.table(\"silver.dim_company\").alias(\"c\")\n",
+					"df_account = spark.table(\"silver.dim_financial_account\").alias(\"d\")\n",
+					"\n",
+					"df_gold_budget_vs_actual = df_actual \\\n",
+					".join(\n",
+					"    df_budget,\n",
+					"    (col(\"a.company_sk\") == col(\"b.company_sk\")) &\n",
+					"    (col(\"a.account_sk\") == col(\"b.account_number\")),\n",
+					"    \"left\"\n",
+					") \\\n",
+					".join(df_company, col(\"a.company_sk\") == col(\"c.company_sk\"), \"left\") \\\n",
+					".join(df_account, col(\"a.account_sk\") == col(\"d.account_sk\"), \"left\") \\\n",
+					".groupBy(\n",
+					"    col(\"c.company_name\"),\n",
+					"    col(\"d.account_type\")\n",
+					") \\\n",
+					".agg(\n",
+					"    sum(\"a.amount_usd\").alias(\"actual_amount\"),\n",
+					"    sum(\"b.budget_amount\").alias(\"budget_amount\")\n",
+					")"
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_gold_budget_vs_actual.write \\\n",
+					"    .format(\"delta\") \\\n",
+					"    .mode(\"overwrite\") \\\n",
+					"    .saveAsTable(\"gol.fact_budget_vs_actual\")"
+				],
+				"execution_count": 10
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Fact Cost Analysis"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_fact = spark.table(\"silver.fact_financial_transactions\").alias(\"f\")\n",
+					"df_cost = spark.table(\"silver.dim_cost_object\").alias(\"c\")\n",
+					"\n",
+					"df_gold_cost = df_fact \\\n",
+					".join(\n",
+					"    df_cost,\n",
+					"    col(\"f.cost_object_sk\") == col(\"c.cost_object_sk\"),\n",
+					"    \"left\"\n",
+					") \\\n",
+					".groupBy(\n",
+					"    col(\"c.cost_object_code\")\n",
+					") \\\n",
+					".agg(\n",
+					"    sum(\"f.amount_usd\").alias(\"total_cost_usd\")\n",
+					")"
+				],
+				"execution_count": 11
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_gold_cost.write \\\n",
+					"    .format(\"delta\") \\\n",
+					"    .mode(\"overwrite\") \\\n",
+					"    .saveAsTable(\"gol.fact_cost_analysis\")"
+				],
+				"execution_count": 12
+			}
+		]
+	}
+}
