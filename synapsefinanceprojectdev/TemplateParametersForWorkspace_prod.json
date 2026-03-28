@@ -5,7 +5,7 @@
 		"workspaceName": {
 			"value": "synapsefinanceproject"
 		},
-		"ls_syn_e2e_accountKey": {
+		"ls_syn_e2e_prod_accountKey": {
 			"value": ""
 		},
 		"synapsefinanceproject-WorkspaceDefaultSqlServer_connectionString": {
@@ -14,7 +14,7 @@
 		"ls_keyvault_properties_typeProperties_baseUrl": {
 			"value": "https://synapse-kv-prod.vault.azure.net/"
 		},
-		"ls_syn_e2e_properties_typeProperties_url": {
+		"ls_syn_e2e_prod_properties_typeProperties_url": {
 			"value": "https://synendtoend.dfs.core.windows.net/"
 		},
 		"synapsefinanceproject-WorkspaceDefaultStorage_properties_typeProperties_url": {
