@@ -1,0 +1,26 @@
+name: Deploy to Prod
+
+on:
+  push:
+    branches:
+      - workspace_publish
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy Synapse
+      uses: Azure/arm-deploy@v1
+      with:
+        resourceGroupName: <prod-resource-group>
+        template: ./TemplateForWorkspace.json
+        parameters: ./TemplateParameters.json
