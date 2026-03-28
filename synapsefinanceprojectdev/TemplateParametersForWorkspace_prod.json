@@ -5,6 +5,9 @@
 		"workspaceName": {
 			"value": "synapsefinanceproject"
 		},
+		"ls_syn_e2e_accountKey": {
+			"value": ""
+		},
 		"synapsefinanceprojectdev-WorkspaceDefaultSqlServer_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapsefinanceproject.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
