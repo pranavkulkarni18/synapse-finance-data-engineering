@@ -21,6 +21,6 @@ jobs:
     - name: Deploy Synapse
       uses: Azure/arm-deploy@v1
       with:
-        resourceGroupName: <prod-resource-group>
+        resourceGroupName: rg_synapse_project
         template: ./TemplateForWorkspace.json
-        parameters: ./TemplateParameters.json
+        parameters: ./TemplateParameters_prod.json
