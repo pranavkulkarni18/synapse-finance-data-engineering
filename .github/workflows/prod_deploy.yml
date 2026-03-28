@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - workspace_publish
+  workflow_dispatch: 
 
 jobs:
   deploy:
