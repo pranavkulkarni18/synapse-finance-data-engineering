@@ -34,24 +34,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('workspaceName'), '/finspkpool')]",
-			"type": "Microsoft.Synapse/workspaces/bigDataPools",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/pipelinespkpool')]",
-			"type": "Microsoft.Synapse/workspaces/bigDataPools",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/pl1')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -30458,7 +30440,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "df91c84d-6436-4038-a4f8-b9efec316f54"
+						"spark.autotune.trackingId": "9c1fed6c-7d7b-4f6f-ba92-f12ac1a8a060"
 					}
 				},
 				"metadata": {
@@ -30483,13 +30465,15 @@
 						"sparkVersion": "3.5",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"%%configure -f\n",
 							"{\n",
@@ -30503,6 +30487,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"from pyspark.sql.functions import col\n",
 							"from pyspark.sql.functions import from_json\n",
@@ -30515,6 +30500,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"storage_account = \"synendtoenddev\"\n",
 							"container_name = \"bronze\"\n",
@@ -30526,6 +30512,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"connectionString = mssparkutils.credentials.getSecret(\n",
 							"    \"synapseFin-kv-dev\",  \n",
@@ -30547,6 +30534,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_raw = spark.readStream \\\n",
 							"    .format(\"eventhubs\") \\\n",
@@ -30558,6 +30546,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"schema = StructType([\n",
 							"    StructField(\"transaction_id\", IntegerType()),\n",
@@ -30575,6 +30564,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_stream = df_raw.selectExpr(\"CAST(body AS STRING) as message\")\n",
 							"\n",
@@ -30587,6 +30577,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"query = df_parsed.writeStream \\\n",
 							"    .format(\"parquet\") \\\n",
@@ -30615,6 +30606,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_fact = spark.readStream \\\n",
 							"    .format(\"parquet\") \\\n",
@@ -30631,6 +30623,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_joined = df_fact.alias(\"f\").join(\n",
 							"    spark.table(\"silver.dim_financial_account\").alias(\"d\"),\n",
@@ -30646,6 +30639,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_final = df_joined.select(\n",
 							"    col(\"f.transaction_id\"),\n",
@@ -30664,6 +30658,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_joined = df_final.join(\n",
 							"    spark.table(\"silver.dim_cost_object\").alias(\"c\"),\n",
@@ -30678,6 +30673,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_final = df_joined.select(\n",
 							"    col(\"f.transaction_id\"),\n",
@@ -30697,6 +30693,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_joined = df_final.join(\n",
 							"    spark.table(\"silver.fact_exchange_rates\").alias(\"fx\"),\n",
@@ -30710,6 +30707,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_final = df_joined.select(\n",
 							"    col(\"f.transaction_id\"),\n",
@@ -30728,6 +30726,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_final = df_final.withColumn(\n",
 							"    \"amount_usd\",\n",
@@ -30739,6 +30738,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"query_1 = df_final.writeStream \\\n",
 							"    .format(\"delta\") \\\n",
@@ -30779,7 +30779,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "cff1427b-4962-430c-b041-0cef2703382c"
+						"spark.autotune.trackingId": "6acb1a4d-1dbd-4feb-b179-3e83151fccde"
 					}
 				},
 				"metadata": {
@@ -30804,8 +30804,7 @@
 						"sparkVersion": "3.5",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
@@ -30826,7 +30825,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"from pyspark.sql import SparkSession\n",
 							"from pyspark.sql.functions import *\n",
@@ -30840,7 +30838,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"storage_account = \"synendtoenddev\"\n",
 							"container_name = \"bronze\"\n",
@@ -30852,7 +30849,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"geography_data = [\n",
 							"    (1, \"IND\", \"India\", \"APAC\", \"INR\"),\n",
@@ -30883,7 +30879,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_geography.write.mode(\"overwrite\").parquet(\n",
 							"    f\"{base_path}/dim_geography\"\n",
@@ -30894,7 +30889,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"companies = []\n",
 							"company_id = 1\n",
@@ -30935,7 +30929,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"schema_company = StructType([\n",
 							"    StructField(\"company_sk\", IntegerType(), False),\n",
@@ -30956,7 +30949,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_company.write.mode(\"overwrite\").parquet(\n",
 							"    f\"{base_path}/dim_company\"\n",
@@ -30967,7 +30959,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"currency_data = [\n",
 							"    (1, \"INR\", \"Indian Rupee\", 2),\n",
@@ -30998,7 +30989,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"currency_type_data = [\n",
 							"    (1, \"Transaction\"),\n",
@@ -31025,7 +31015,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"document_type_data = [\n",
 							"    (1, \"INV\", \"Invoice\"),\n",
@@ -31056,7 +31045,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"start_date = datetime(2023, 1, 1)\n",
 							"end_date   = datetime(2025, 12, 31)\n",
@@ -31082,7 +31070,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_calendar = df_calendar \\\n",
 							"    .withColumn(\"day_number\", dayofmonth(\"fiscal_date\")) \\\n",
@@ -31111,7 +31098,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"profit_units = []\n",
 							"profit_unit_sk = 1\n",
@@ -31147,7 +31133,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"schema_profit_unit = StructType([\n",
 							"    StructField(\"profit_unit_sk\", IntegerType(), False),\n",
@@ -31169,7 +31154,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"account_types = [\"Revenue\", \"Expense\", \"Asset\", \"Liability\"]\n",
 							"reporting_groups = [\"Operating\", \"Non-Operating\", \"Financial\", \"Tax\"]\n",
@@ -31218,7 +31202,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"cost_objects_raw = []\n",
 							"\n",
@@ -31268,7 +31251,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"from pyspark.sql.types import *\n",
 							"\n",
