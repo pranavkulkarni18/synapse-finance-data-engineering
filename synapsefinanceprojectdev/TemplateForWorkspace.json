@@ -30440,7 +30440,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "d1075657-8c9a-473a-a54f-d2ef2013b82e"
+						"spark.autotune.trackingId": "074bed7a-7820-42c5-b000-77012a08f933"
 					}
 				},
 				"metadata": {
@@ -30483,7 +30483,7 @@
 							"}"
 						],
 						"outputs": [],
-						"execution_count": 3
+						"execution_count": 1
 					},
 					{
 						"cell_type": "code",
@@ -30496,7 +30496,7 @@
 							"from pyspark.sql.types import StructType, StructField"
 						],
 						"outputs": [],
-						"execution_count": 4
+						"execution_count": 2
 					},
 					{
 						"cell_type": "code",
@@ -30508,7 +30508,7 @@
 							"base_path = f\"abfss://{container_name}@{storage_account}.dfs.core.windows.net\""
 						],
 						"outputs": [],
-						"execution_count": 5
+						"execution_count": 3
 					},
 					{
 						"cell_type": "code",
@@ -30531,7 +30531,7 @@
 							"}"
 						],
 						"outputs": [],
-						"execution_count": 20
+						"execution_count": 4
 					},
 					{
 						"cell_type": "code",
@@ -30543,7 +30543,7 @@
 							"    .load()"
 						],
 						"outputs": [],
-						"execution_count": 21
+						"execution_count": 5
 					},
 					{
 						"cell_type": "code",
@@ -30561,7 +30561,7 @@
 							"])"
 						],
 						"outputs": [],
-						"execution_count": 22
+						"execution_count": 6
 					},
 					{
 						"cell_type": "code",
@@ -30574,7 +30574,7 @@
 							").select(\"data.*\")"
 						],
 						"outputs": [],
-						"execution_count": 23
+						"execution_count": 7
 					},
 					{
 						"cell_type": "code",
@@ -30590,7 +30590,7 @@
 							"    .start()"
 						],
 						"outputs": [],
-						"execution_count": 24
+						"execution_count": 8
 					},
 					{
 						"cell_type": "markdown",
@@ -30620,7 +30620,7 @@
 							")"
 						],
 						"outputs": [],
-						"execution_count": 25
+						"execution_count": 9
 					},
 					{
 						"cell_type": "code",
@@ -30636,7 +30636,7 @@
 							""
 						],
 						"outputs": [],
-						"execution_count": 26
+						"execution_count": 10
 					},
 					{
 						"cell_type": "code",
@@ -30655,7 +30655,7 @@
 							")"
 						],
 						"outputs": [],
-						"execution_count": 27
+						"execution_count": 11
 					},
 					{
 						"cell_type": "code",
@@ -30670,7 +30670,7 @@
 							")"
 						],
 						"outputs": [],
-						"execution_count": 28
+						"execution_count": 12
 					},
 					{
 						"cell_type": "code",
@@ -30690,7 +30690,7 @@
 							")"
 						],
 						"outputs": [],
-						"execution_count": 29
+						"execution_count": 13
 					},
 					{
 						"cell_type": "code",
@@ -30704,7 +30704,7 @@
 							")"
 						],
 						"outputs": [],
-						"execution_count": 30
+						"execution_count": 14
 					},
 					{
 						"cell_type": "code",
@@ -30723,7 +30723,7 @@
 							")"
 						],
 						"outputs": [],
-						"execution_count": 31
+						"execution_count": 15
 					},
 					{
 						"cell_type": "code",
@@ -30735,7 +30735,7 @@
 							")"
 						],
 						"outputs": [],
-						"execution_count": 32
+						"execution_count": 16
 					},
 					{
 						"cell_type": "code",
@@ -30749,7 +30749,7 @@
 							"    .start(\"abfss://silver@synendtoenddev.dfs.core.windows.net/fact_financial_transactions\")"
 						],
 						"outputs": [],
-						"execution_count": 33
+						"execution_count": 17
 					}
 				]
 			},
