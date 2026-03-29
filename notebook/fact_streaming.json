@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "3e7c5e0c-263b-4ecf-9a31-22d4b1a6eac0"
+				"spark.autotune.trackingId": "6982ebf0-5dc1-4186-bd33-77201938ca88"
 			}
 		},
 		"metadata": {
@@ -62,7 +62,7 @@
 					"  }\n",
 					"}"
 				],
-				"execution_count": 7
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -73,7 +73,7 @@
 					"from pyspark.sql.types import *\n",
 					"from pyspark.sql.types import StructType, StructField"
 				],
-				"execution_count": 8
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",
@@ -83,14 +83,15 @@
 					"\n",
 					"base_path = f\"abfss://{container_name}@{storage_account}.dfs.core.windows.net\""
 				],
-				"execution_count": 9
+				"execution_count": 5
 			},
 			{
 				"cell_type": "code",
 				"source": [
 					"connectionString = mssparkutils.credentials.getSecret(\n",
 					"    \"synapseFin-kv-dev\",  \n",
-					"    \"ehConnectionString\"\n",
+					"    \"ehConnectionString\",\n",
+					"    \"ls_keyvault\"\n",
 					")\n",
 					"\n",
 					"ehConf = {\n",
@@ -103,7 +104,7 @@
 					"  })\n",
 					"}"
 				],
-				"execution_count": 11
+				"execution_count": 20
 			},
 			{
 				"cell_type": "code",
@@ -113,7 +114,7 @@
 					"    .options(**ehConf) \\\n",
 					"    .load()"
 				],
-				"execution_count": 12
+				"execution_count": 21
 			},
 			{
 				"cell_type": "code",
@@ -129,7 +130,7 @@
 					"    StructField(\"transaction_date\", StringType())\n",
 					"])"
 				],
-				"execution_count": 13
+				"execution_count": 22
 			},
 			{
 				"cell_type": "code",
@@ -140,7 +141,7 @@
 					"    from_json(col(\"message\"), schema).alias(\"data\")\n",
 					").select(\"data.*\")"
 				],
-				"execution_count": 14
+				"execution_count": 23
 			},
 			{
 				"cell_type": "code",
@@ -154,7 +155,7 @@
 					"    .trigger(processingTime=\"10 seconds\") \\\n",
 					"    .start()"
 				],
-				"execution_count": 15
+				"execution_count": 24
 			},
 			{
 				"cell_type": "markdown",
@@ -182,7 +183,7 @@
 					"    (col(\"transaction_date\").cast(\"date\"))\n",
 					")"
 				],
-				"execution_count": 16
+				"execution_count": 25
 			},
 			{
 				"cell_type": "code",
@@ -196,7 +197,7 @@
 					")\n",
 					""
 				],
-				"execution_count": 17
+				"execution_count": 26
 			},
 			{
 				"cell_type": "code",
@@ -213,7 +214,7 @@
 					"    col(\"f.transaction_date\")\n",
 					")"
 				],
-				"execution_count": 18
+				"execution_count": 27
 			},
 			{
 				"cell_type": "code",
@@ -226,7 +227,7 @@
 					"    \"left\"\n",
 					")"
 				],
-				"execution_count": 19
+				"execution_count": 28
 			},
 			{
 				"cell_type": "code",
@@ -244,7 +245,7 @@
 					"    col(\"f.transaction_date\")\n",
 					")"
 				],
-				"execution_count": 20
+				"execution_count": 29
 			},
 			{
 				"cell_type": "code",
@@ -256,7 +257,7 @@
 					"    \"left\"\n",
 					")"
 				],
-				"execution_count": 21
+				"execution_count": 30
 			},
 			{
 				"cell_type": "code",
@@ -273,7 +274,7 @@
 					"    col(\"fx.rate_to_usd\")\n",
 					")"
 				],
-				"execution_count": 22
+				"execution_count": 31
 			},
 			{
 				"cell_type": "code",
@@ -283,7 +284,7 @@
 					"    col(\"amount\") * col(\"rate_to_usd\")\n",
 					")"
 				],
-				"execution_count": 23
+				"execution_count": 32
 			},
 			{
 				"cell_type": "code",
@@ -295,7 +296,7 @@
 					"    .option(\"checkpointLocation\", \"abfss://silver@synendtoenddev.dfs.core.windows.net/checkpoints/fact_transactions\") \\\n",
 					"    .start(\"abfss://silver@synendtoenddev.dfs.core.windows.net/fact_financial_transactions\")"
 				],
-				"execution_count": 24
+				"execution_count": 33
 			}
 		]
 	}
