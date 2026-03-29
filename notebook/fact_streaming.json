@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "6982ebf0-5dc1-4186-bd33-77201938ca88"
+				"spark.autotune.trackingId": "face4a1e-958e-4b96-8267-fb0f3bf8c9e8"
 			}
 		},
 		"metadata": {
@@ -62,7 +62,7 @@
 					"  }\n",
 					"}"
 				],
-				"execution_count": 3
+				"execution_count": 1
 			},
 			{
 				"cell_type": "code",
@@ -73,7 +73,7 @@
 					"from pyspark.sql.types import *\n",
 					"from pyspark.sql.types import StructType, StructField"
 				],
-				"execution_count": 4
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -83,7 +83,7 @@
 					"\n",
 					"base_path = f\"abfss://{container_name}@{storage_account}.dfs.core.windows.net\""
 				],
-				"execution_count": 5
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -104,7 +104,7 @@
 					"  })\n",
 					"}"
 				],
-				"execution_count": 20
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",
@@ -114,7 +114,7 @@
 					"    .options(**ehConf) \\\n",
 					"    .load()"
 				],
-				"execution_count": 21
+				"execution_count": 5
 			},
 			{
 				"cell_type": "code",
@@ -130,7 +130,7 @@
 					"    StructField(\"transaction_date\", StringType())\n",
 					"])"
 				],
-				"execution_count": 22
+				"execution_count": 6
 			},
 			{
 				"cell_type": "code",
@@ -141,7 +141,7 @@
 					"    from_json(col(\"message\"), schema).alias(\"data\")\n",
 					").select(\"data.*\")"
 				],
-				"execution_count": 23
+				"execution_count": 7
 			},
 			{
 				"cell_type": "code",
@@ -155,7 +155,7 @@
 					"    .trigger(processingTime=\"10 seconds\") \\\n",
 					"    .start()"
 				],
-				"execution_count": 24
+				"execution_count": 8
 			},
 			{
 				"cell_type": "markdown",
@@ -183,7 +183,7 @@
 					"    (col(\"transaction_date\").cast(\"date\"))\n",
 					")"
 				],
-				"execution_count": 25
+				"execution_count": 9
 			},
 			{
 				"cell_type": "code",
@@ -197,7 +197,7 @@
 					")\n",
 					""
 				],
-				"execution_count": 26
+				"execution_count": 10
 			},
 			{
 				"cell_type": "code",
@@ -214,7 +214,7 @@
 					"    col(\"f.transaction_date\")\n",
 					")"
 				],
-				"execution_count": 27
+				"execution_count": 11
 			},
 			{
 				"cell_type": "code",
@@ -227,7 +227,7 @@
 					"    \"left\"\n",
 					")"
 				],
-				"execution_count": 28
+				"execution_count": 12
 			},
 			{
 				"cell_type": "code",
@@ -245,7 +245,7 @@
 					"    col(\"f.transaction_date\")\n",
 					")"
 				],
-				"execution_count": 29
+				"execution_count": 13
 			},
 			{
 				"cell_type": "code",
@@ -257,7 +257,7 @@
 					"    \"left\"\n",
 					")"
 				],
-				"execution_count": 30
+				"execution_count": 14
 			},
 			{
 				"cell_type": "code",
@@ -274,7 +274,7 @@
 					"    col(\"fx.rate_to_usd\")\n",
 					")"
 				],
-				"execution_count": 31
+				"execution_count": 15
 			},
 			{
 				"cell_type": "code",
@@ -284,7 +284,7 @@
 					"    col(\"amount\") * col(\"rate_to_usd\")\n",
 					")"
 				],
-				"execution_count": 32
+				"execution_count": 16
 			},
 			{
 				"cell_type": "code",
@@ -296,7 +296,7 @@
 					"    .option(\"checkpointLocation\", \"abfss://silver@synendtoenddev.dfs.core.windows.net/checkpoints/fact_transactions\") \\\n",
 					"    .start(\"abfss://silver@synendtoenddev.dfs.core.windows.net/fact_financial_transactions\")"
 				],
-				"execution_count": 33
+				"execution_count": 17
 			}
 		]
 	}
